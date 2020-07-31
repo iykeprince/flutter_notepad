@@ -10,58 +10,70 @@ List<Note> list = [
     1,
     'Notes from UI event',
     'Lorem ipsum dolor sit amet, conseletur sadpacing...',
+    false,
     'Oct 25, 2019, 10:25',
   ),
   Note(
     2,
     'Material Design',
-        'Material Design is a design language that Google developed in 2014. Expanding..',
+    'Material Design is a design language that Google developed in 2014. Expanding..',
+    true,
     'Oct 25, 2019, 9:25',
   ),
   Note(
     3,
     'Meeting 20/10',
     'Lorem ipsum dolor sit amet, conseletur sadpacing...',
+    false,
     'Oct 25, 2019, 10:25',
   ),
-  Note(4,
+  Note(
+    4,
     'Notes from client meeting',
     'Lorem ipsum dolor sit amet, conseletur sadpacing...',
+    false,
     'Oct 25, 2019, 10:25',
   ),
-  Note(5,
+  Note(
+    5,
     'Report 100',
     'Lorem ipsum dolor sit amet, conseletur sadpacing...',
+    true,
     'Oct 25, 2019, 10:25',
   ),
   Note(
     6,
-     'Client email list',
+    'Client email list',
     'Lorem ipsum dolor sit amet, conseletur sadpacing...',
+    false,
     'Oct 25, 2019, 10:25',
   ),
   Note(
     7,
     'Notes from meeting 10/10',
     'Lorem ipsum dolor sit amet, conseletur sadpacing...',
+    true,
     'Oct 25, 2019, 10:25',
   ),
   Note(
     8,
     'Notes from UI event',
     'Lorem ipsum dolor sit amet, conseletur sadpacing...',
+    false,
     'Oct 25, 2019, 10:25',
   ),
   Note(
     9,
     'Notes from UI event',
     'Lorem ipsum dolor sit amet, conseletur sadpacing...',
+    false,
     'Oct 25, 2019, 10:25',
   ),
   Note(
     10,
     'Notes from UI event',
     'Lorem ipsum dolor sit amet, conseletur sadpacing...',
+    true,
     'Oct 25, 2019, 10:25',
   ),
 ];
@@ -77,6 +89,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   _listItem(ctx, index) {
+    Note note = list[index];
     return Column(
       children: [
         ListTile(
@@ -84,10 +97,11 @@ class _HomeState extends State<Home> {
             Navigator.pushNamed(
               context,
               Detail.routeName,
+              arguments: false,
             );
           },
           title: Text(
-            list[index].title,
+            note.title,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -95,7 +109,7 @@ class _HomeState extends State<Home> {
             ),
           ),
           subtitle: Text(
-            list[index].note,
+            note.note,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w300,
@@ -112,9 +126,19 @@ class _HomeState extends State<Home> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: <Widget>[
-                    Icon(
-                      Icons.star,
-                      color: Colors.orange,
+                    InkWell(
+                      onTap: () async {
+                        note.isFavorite = !note.isFavorite;
+                        await noteDao.updateNote(note);
+
+                        note = await noteDao.getNoteById(note.id);
+                        print('currrent note: $note');
+                        setState(() {});
+                      },
+                      child: Icon(
+                        list[index].isFavorite ? Icons.star : Icons.star_border,
+                        color: Colors.orange,
+                      ),
                     ),
                     Icon(
                       Icons.more_vert,
@@ -122,7 +146,7 @@ class _HomeState extends State<Home> {
                   ],
                 ),
                 Text(
-                  '${list[index].dateTime}',
+                  '${note.dateTime}',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
@@ -144,9 +168,9 @@ class _HomeState extends State<Home> {
     initDb();
     super.initState();
   }
-  
+
   initDb() async {
-     final database =
+    final database =
         await $FloorAppDatabase.databaseBuilder('app_database.db').build();
     noteDao = database.noteDao;
 
@@ -154,7 +178,9 @@ class _HomeState extends State<Home> {
     // await noteDao.insertNote(note);
 
     final result = await noteDao.getNotes();
-    // list.add(result[0]);
+    result.forEach((note) {
+      list.add(note);
+    });
   }
 
   @override
@@ -191,7 +217,13 @@ class _HomeState extends State<Home> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.pushNamed(
+            context,
+            Detail.routeName,
+            arguments: true,
+          );
+        },
         child: Icon(
           Icons.add,
         ),

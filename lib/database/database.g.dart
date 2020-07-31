@@ -65,7 +65,7 @@ class _$AppDatabase extends AppDatabase {
   Future<sqflite.Database> open(String path, List<Migration> migrations,
       [Callback callback]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 1,
+      version: 2,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
       },
@@ -80,7 +80,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Note` (`id` INTEGER, `title` TEXT, `note` TEXT, `dateTime` TEXT, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `Note` (`id` INTEGER, `title` TEXT, `note` TEXT, `isFavorite` INTEGER, `dateTime` TEXT, PRIMARY KEY (`id`))');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -96,7 +96,7 @@ class _$AppDatabase extends AppDatabase {
 
 class _$NoteDAO extends NoteDAO {
   _$NoteDAO(this.database, this.changeListener)
-      : _queryAdapter = QueryAdapter(database, changeListener),
+      : _queryAdapter = QueryAdapter(database),
         _noteInsertionAdapter = InsertionAdapter(
             database,
             'Note',
@@ -104,9 +104,24 @@ class _$NoteDAO extends NoteDAO {
                   'id': item.id,
                   'title': item.title,
                   'note': item.note,
+                  'isFavorite': item.isFavorite == null
+                      ? null
+                      : (item.isFavorite ? 1 : 0),
                   'dateTime': item.dateTime
-                },
-            changeListener);
+                }),
+        _noteUpdateAdapter = UpdateAdapter(
+            database,
+            'Note',
+            ['id'],
+            (Note item) => <String, dynamic>{
+                  'id': item.id,
+                  'title': item.title,
+                  'note': item.note,
+                  'isFavorite': item.isFavorite == null
+                      ? null
+                      : (item.isFavorite ? 1 : 0),
+                  'dateTime': item.dateTime
+                });
 
   final sqflite.DatabaseExecutor database;
 
@@ -118,9 +133,12 @@ class _$NoteDAO extends NoteDAO {
       row['id'] as int,
       row['title'] as String,
       row['note'] as String,
+      row['isFavorite'] == null ? null : (row['isFavorite'] as int) != 0,
       row['dateTime'] as String);
 
   final InsertionAdapter<Note> _noteInsertionAdapter;
+
+  final UpdateAdapter<Note> _noteUpdateAdapter;
 
   @override
   Future<List<Note>> getNotes() async {
@@ -128,16 +146,19 @@ class _$NoteDAO extends NoteDAO {
   }
 
   @override
-  Stream<Note> getNoteById(int id) {
-    return _queryAdapter.queryStream('SELECT * FROM Note WHERE id = ?',
-        arguments: <dynamic>[id],
-        queryableName: 'Note',
-        isView: false,
-        mapper: _noteMapper);
+  Future<Note> getNoteById(int id) async {
+    return _queryAdapter.query('SELECT * FROM Note WHERE id = ?',
+        arguments: <dynamic>[id], mapper: _noteMapper);
   }
 
   @override
   Future<void> insertNote(Note note) async {
     await _noteInsertionAdapter.insert(note, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> updateNote(Note note) {
+    return _noteUpdateAdapter.updateAndReturnChangedRows(
+        note, OnConflictStrategy.abort);
   }
 }

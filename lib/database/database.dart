@@ -7,7 +7,7 @@ import 'entities/note.dart';
 
 part 'database.g.dart';
 
-@Database(version: 1, entities: [Note])
+@Database(version: 2, entities: [Note])
 abstract class AppDatabase extends FloorDatabase {
   NoteDAO get noteDao;
 }

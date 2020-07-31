@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:notepad/database/dao/note_dao.dart';
+import 'package:notepad/database/database.dart';
+import 'package:notepad/database/entities/note.dart';
 
 class Detail extends StatefulWidget {
   static const String routeName = '/detail';
@@ -12,10 +15,23 @@ class _DetailState extends State<Detail> {
   bool isEditing = false;
   TextEditingController _titleFieldController = TextEditingController();
   TextEditingController _noteFieldController = TextEditingController();
+  NoteDAO noteDao;
+
+  @override
+  void initState() {
+    initDB();
+    super.initState();
+  }
+
+  initDB() async {
+    final database =
+        await $FloorAppDatabase.databaseBuilder('app_database.db').build();
+    noteDao = database.noteDao;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // isEditing = ModalRoute.of(context).settings.arguments;
+    isEditing = ModalRoute.of(context).settings.arguments;
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -26,10 +42,37 @@ class _DetailState extends State<Detail> {
               borderRadius: BorderRadius.circular(8)),
           child: IconButton(
             icon: Icon(Icons.arrow_back_ios),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pop(context);
+            },
           ),
         ),
-        actions: <Widget>[IconButton(icon: Icon(Icons.check), onPressed: null)],
+        actions: <Widget>[
+          IconButton(
+              icon: Icon(Icons.check),
+              onPressed: () async {
+                Note note = Note(
+                  0,
+                  _titleFieldController.text,
+                  _noteFieldController.text,
+                  false,
+                  DateTime.now().toString(),
+                );
+                await noteDao.insertNote(note);
+                Scaffold.of(context).showSnackBar(
+                  SnackBar(
+                    duration: Duration(seconds: 3),
+                    backgroundColor: Colors.black,
+                    content: Text(
+                      'Note saved!',
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              })
+        ],
       ),
       body: ListView(
         children: [

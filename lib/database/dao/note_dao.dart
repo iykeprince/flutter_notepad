@@ -7,8 +7,11 @@ abstract class NoteDAO {
   Future<List<Note>> getNotes();
 
   @Query('SELECT * FROM Note WHERE id = :id')
-  Stream<Note> getNoteById(int id);
+  Future<Note> getNoteById(int id);
 
   @insert
   Future<void> insertNote(Note note);
+
+  @update
+  Future<int> updateNote(Note note);
 }
