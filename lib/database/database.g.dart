@@ -80,7 +80,7 @@ class _$AppDatabase extends AppDatabase {
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Note` (`id` INTEGER, `title` TEXT, `note` TEXT, `isFavorite` INTEGER, `dateTime` TEXT, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `Note` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `title` TEXT, `note` TEXT, `isFavorite` INTEGER, `dateTime` TEXT)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -130,11 +130,12 @@ class _$NoteDAO extends NoteDAO {
   final QueryAdapter _queryAdapter;
 
   static final _noteMapper = (Map<String, dynamic> row) => Note(
-      row['id'] as int,
-      row['title'] as String,
-      row['note'] as String,
-      row['isFavorite'] == null ? null : (row['isFavorite'] as int) != 0,
-      row['dateTime'] as String);
+      id: row['id'] as int,
+      title: row['title'] as String,
+      note: row['note'] as String,
+      isFavorite:
+          row['isFavorite'] == null ? null : (row['isFavorite'] as int) != 0,
+      dateTime: row['dateTime'] as String);
 
   final InsertionAdapter<Note> _noteInsertionAdapter;
 

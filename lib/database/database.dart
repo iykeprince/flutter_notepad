@@ -12,4 +12,9 @@ abstract class AppDatabase extends FloorDatabase {
   NoteDAO get noteDao;
 }
 
+// create migration
+final migration1to2 = Migration(1, 2, (database) async {
+  await database.execute('ALTER TABLE Note ADD COLUMN isFavorite INTEGER');
+});
+
 

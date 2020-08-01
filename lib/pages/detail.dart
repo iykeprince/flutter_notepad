@@ -3,6 +3,8 @@ import 'package:notepad/database/dao/note_dao.dart';
 import 'package:notepad/database/database.dart';
 import 'package:notepad/database/entities/note.dart';
 
+import '../note_model.dart';
+
 class Detail extends StatefulWidget {
   static const String routeName = '/detail';
   Detail({Key key}) : super(key: key);
@@ -12,10 +14,11 @@ class Detail extends StatefulWidget {
 }
 
 class _DetailState extends State<Detail> {
-  bool isEditing = false;
+  bool isEditing;
   TextEditingController _titleFieldController = TextEditingController();
   TextEditingController _noteFieldController = TextEditingController();
   NoteDAO noteDao;
+  Note note;
 
   @override
   void initState() {
@@ -24,14 +27,18 @@ class _DetailState extends State<Detail> {
   }
 
   initDB() async {
-    final database =
-        await $FloorAppDatabase.databaseBuilder('app_database.db').build();
+    final database = await $FloorAppDatabase
+        .databaseBuilder('app_database.db')
+        .addMigrations([migration1to2]).build();
     noteDao = database.noteDao;
   }
 
   @override
   Widget build(BuildContext context) {
-    isEditing = ModalRoute.of(context).settings.arguments;
+    NoteModel noteModel = ModalRoute.of(context).settings.arguments;
+    isEditing = noteModel.isEditing;
+    note = noteModel.note;
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -48,30 +55,20 @@ class _DetailState extends State<Detail> {
           ),
         ),
         actions: <Widget>[
-          IconButton(
-              icon: Icon(Icons.check),
-              onPressed: () async {
-                Note note = Note(
-                  0,
-                  _titleFieldController.text,
-                  _noteFieldController.text,
-                  false,
-                  DateTime.now().toString(),
-                );
-                await noteDao.insertNote(note);
-                Scaffold.of(context).showSnackBar(
-                  SnackBar(
-                    duration: Duration(seconds: 3),
-                    backgroundColor: Colors.black,
-                    content: Text(
-                      'Note saved!',
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                );
-              })
+          isEditing
+              ? IconButton(
+                  icon: Icon(Icons.check),
+                  onPressed: () async {
+                    Note note = Note(
+                      title: _titleFieldController.text,
+                      note: _noteFieldController.text,
+                      isFavorite: false,
+                      dateTime: DateTime.now().toString(),
+                    );
+                    await noteDao.insertNote(note);
+                    print('note saved');
+                  })
+              : Container()
         ],
       ),
       body: ListView(
@@ -93,12 +90,11 @@ class _DetailState extends State<Detail> {
                 children: <Widget>[
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: isEditing
+                    child: !isEditing
                         ? Text(
-                            'Google Meeting 10/20',
+                            '${note.title}',
                             style: TextStyle(
                               fontSize: 36,
                               fontWeight: FontWeight.bold,
@@ -106,7 +102,10 @@ class _DetailState extends State<Detail> {
                           )
                         : Container(
                             height: 60,
-                            child: TextFormField(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                            ),
+                            child: TextField(
                               controller: _titleFieldController,
                               autocorrect: false,
                               keyboardType: TextInputType.text,
@@ -115,12 +114,10 @@ class _DetailState extends State<Detail> {
                                 fontWeight: FontWeight.w400,
                               ),
                               decoration: InputDecoration(
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 16,
-                                ),
-                              ),
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.only(
+                                    left: 8,
+                                  )),
                             ),
                           ),
                   ),
@@ -128,9 +125,9 @@ class _DetailState extends State<Detail> {
                     color: Theme.of(context).accentColor.withOpacity(.9),
                   ),
                   Container(
-                    child: isEditing
+                    child: !isEditing
                         ? Text(
-                            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                            '${note.note}',
                           )
                         : Container(
                             height: 250,
@@ -159,7 +156,7 @@ class _DetailState extends State<Detail> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text('Oct 10, 2020 10:20'),
+                        Text('${!isEditing ? note.dateTime : ''}'),
                         Row(
                           children: <Widget>[
                             Icon(Icons.image),
