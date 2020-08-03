@@ -67,6 +67,7 @@ class _DetailState extends State<Detail> {
                     );
                     await noteDao.insertNote(note);
                     print('note saved');
+                    Navigator.pop(context);
                   })
               : Container()
         ],

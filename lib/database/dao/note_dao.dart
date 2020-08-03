@@ -12,6 +12,6 @@ abstract class NoteDAO {
   @insert
   Future<void> insertNote(Note note);
 
-  @update
-  Future<int> updateNote(Note note);
+  // @update
+  // Future<int> updateNote(Note note, int id);
 }

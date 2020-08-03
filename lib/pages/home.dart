@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
 import 'package:notepad/database/dao/note_dao.dart';
 import 'package:notepad/database/database.dart';
 import 'package:notepad/database/entities/note.dart';
@@ -7,69 +9,7 @@ import 'package:notepad/pages/detail.dart';
 
 import '../note_model.dart';
 
-List<Note> list = [
-  Note(
-    title: 'Notes from UI event',
-    note: 'Lorem ipsum dolor sit amet, conseletur sadpacing...',
-    isFavorite: false,
-    dateTime: 'Oct 25, 2019, 10:25',
-  ),
-  Note(
-    title: 'Material Design',
-    note:
-        'Material Design is a design language that Google developed in 2014. Expanding..',
-    isFavorite: true,
-    dateTime: 'Oct 25, 2019, 9:25',
-  ),
-  Note(
-    title: 'Meeting 20/10',
-    note: 'Lorem ipsum dolor sit amet, conseletur sadpacing...',
-    isFavorite: false,
-    dateTime: 'Oct 25, 2019, 10:25',
-  ),
-  Note(
-    title: 'Notes from client meeting',
-    note: 'Lorem ipsum dolor sit amet, conseletur sadpacing...',
-    isFavorite: false,
-    dateTime: 'Oct 25, 2019, 10:25',
-  ),
-  Note(
-    title: 'Report 100',
-    note: 'Lorem ipsum dolor sit amet, conseletur sadpacing...',
-    isFavorite: true,
-    dateTime: 'Oct 25, 2019, 10:25',
-  ),
-  Note(
-    title: 'Client email list',
-    note: 'Lorem ipsum dolor sit amet, conseletur sadpacing...',
-    isFavorite: false,
-    dateTime: 'Oct 25, 2019, 10:25',
-  ),
-  Note(
-    title: 'Notes from meeting 10/10',
-    note: 'Lorem ipsum dolor sit amet, conseletur sadpacing...',
-    isFavorite: true,
-    dateTime: 'Oct 25, 2019, 10:25',
-  ),
-  Note(
-    title: 'Notes from UI event',
-    note: 'Lorem ipsum dolor sit amet, conseletur sadpacing...',
-    isFavorite: false,
-    dateTime: 'Oct 25, 2019, 10:25',
-  ),
-  Note(
-    title: 'Notes from UI event',
-    note: 'Lorem ipsum dolor sit amet, conseletur sadpacing...',
-    isFavorite: false,
-    dateTime: 'Oct 25, 2019, 10:25',
-  ),
-  Note(
-    title: 'Notes from UI event',
-    note: 'Lorem ipsum dolor sit amet, conseletur sadpacing...',
-    isFavorite: true,
-    dateTime: 'Oct 25, 2019, 10:25',
-  ),
-];
+List<Note> list = [];
 NoteDAO noteDao;
 
 class Home extends StatefulWidget {
@@ -84,6 +24,7 @@ class _HomeState extends State<Home> {
   _listItem(ctx, index) {
     Note note = list[index];
     NoteModel noteModel = new NoteModel(note: note, isEditing: false);
+    DateTime dateTime = DateTime.parse(note.dateTime);
     return Column(
       children: [
         ListTile(
@@ -122,8 +63,10 @@ class _HomeState extends State<Home> {
                   children: <Widget>[
                     InkWell(
                       onTap: () async {
+                        print('new isFavorite: ${note.isFavorite}');
                         note.isFavorite = !note.isFavorite;
-                        await noteDao.updateNote(note);
+                        print('new isFavorite: ${note.isFavorite}');
+                        // await noteDao.updateNote(note, note.id);
 
                         note = await noteDao.getNoteById(note.id);
                         print('currrent note: $note');
@@ -140,7 +83,7 @@ class _HomeState extends State<Home> {
                   ],
                 ),
                 Text(
-                  '${note.dateTime}',
+                  '${DateFormat.yMEd().add_jms().format(dateTime)}',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
@@ -208,9 +151,10 @@ class _HomeState extends State<Home> {
         future: getNotes(),
         builder: (context, AsyncSnapshot<List<Note>> snapshot) {
           if (snapshot.hasData) {
-            snapshot.data.forEach((note) {
-              list.add(note);
-            });
+            // snapshot.data.forEach((note) {
+            //   list.add(note);
+            // });
+            list = snapshot.data;
             return Container(
               child: ListView.builder(
                 itemCount: list.length,
@@ -218,8 +162,8 @@ class _HomeState extends State<Home> {
                 scrollDirection: Axis.vertical,
               ),
             );
-          } else if (!snapshot.hasData) {
-            return Container(child: CircularProgressIndicator());
+          } else {
+            return Center(child: CircularProgressIndicator());
           }
         },
       ),

@@ -108,19 +108,6 @@ class _$NoteDAO extends NoteDAO {
                       ? null
                       : (item.isFavorite ? 1 : 0),
                   'dateTime': item.dateTime
-                }),
-        _noteUpdateAdapter = UpdateAdapter(
-            database,
-            'Note',
-            ['id'],
-            (Note item) => <String, dynamic>{
-                  'id': item.id,
-                  'title': item.title,
-                  'note': item.note,
-                  'isFavorite': item.isFavorite == null
-                      ? null
-                      : (item.isFavorite ? 1 : 0),
-                  'dateTime': item.dateTime
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -139,8 +126,6 @@ class _$NoteDAO extends NoteDAO {
 
   final InsertionAdapter<Note> _noteInsertionAdapter;
 
-  final UpdateAdapter<Note> _noteUpdateAdapter;
-
   @override
   Future<List<Note>> getNotes() async {
     return _queryAdapter.queryList('SELECT * FROM Note', mapper: _noteMapper);
@@ -155,11 +140,5 @@ class _$NoteDAO extends NoteDAO {
   @override
   Future<void> insertNote(Note note) async {
     await _noteInsertionAdapter.insert(note, OnConflictStrategy.abort);
-  }
-
-  @override
-  Future<int> updateNote(Note note) {
-    return _noteUpdateAdapter.updateAndReturnChangedRows(
-        note, OnConflictStrategy.abort);
   }
 }
